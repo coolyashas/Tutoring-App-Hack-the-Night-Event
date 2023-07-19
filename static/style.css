@@ -1,0 +1,62 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+  }
+  header {
+    background-color: #000;
+    color: #fff;
+    padding: 40px;
+    text-align: center;
+  }
+  h1 {
+    font-size: 48px;
+    margin-top: 0;
+  }
+  nav {
+    display: flex;
+    justify-content: center; /* Center align navigation items */
+    align-items: center;
+    background-color: #333;
+    padding: 20px 0;
+  }
+  nav a {
+    padding: 10px 20px;
+    text-decoration: none;
+    color: #fff;
+    margin: 0 10px;
+    background-color: #555; /* Add background color to navigation links */
+    border-radius: 5px;
+    transition: background-color 0.3s ease; /* Add transition effect */
+  }
+  nav a:hover {
+    background-color: #777;
+  }
+  main {
+    padding: 40px;
+  }
+  section {
+    margin-bottom: 40px;
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  h2 {
+    font-size: 36px;
+    border-bottom: 1px solid #ccc; /* Add a border bottom to h2 */
+    padding-bottom: 10px; /* Add some spacing below h2 */
+  }
+  p {
+    margin-top: 0;
+    line-height: 1.6; /* Increase line height for better readability */
+  }
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  li {
+    margin-bottom: 15px; /* Increase margin-bottom for better spacing */
+  }
+  footer {
+    padding: 40px;
+  }

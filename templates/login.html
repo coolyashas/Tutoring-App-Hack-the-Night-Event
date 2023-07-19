@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="static/style.css">
+    <title>User Login</title>
+</head>
+<body>
+    <div style="text-align: center;">
+    <h1>User Login</h1>
+    {% block main %}
+
+    <form method="post" action="/"> <!-- trigger login fn -->
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br></br>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br></br>
+
+        <label for="role"> Who are you? </label>
+        <select id="role" name="role" required>
+            <option value="student">Student</option>
+            <option value="tutor">Tutor</option>
+        </select>
+
+        <button class="btn btn-primary" type="submit">Login</button>
+    </div>
+        
+        <div style="text-align: center;">
+        </div>
+    </form>
+    {% endblock %}
+</body>

@@ -2,11 +2,10 @@ from flask import Flask, redirect, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import sha256_crypt
 from datetime import datetime
-#from helpers import login_required
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mydatabase.db'
-app.config['SECRET_KEY'] = 'vyuvbyubugYUVKFVKUFV7678vk'  # Set a secret key for session encryption
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SECRET_KEY'] = 'vyuvbyubugYUVKFVKUFV7678vk'
 db = SQLAlchemy(app)
 
 class Student(db.Model):
@@ -51,6 +50,7 @@ def login():
     session.clear()
 
     if request.method == 'POST':
+        print("post HIII")
 
         username = request.form['username']
         password = request.form['password']
@@ -62,8 +62,6 @@ def login():
             row = Student.query.filter_by(username=username).first()
 
         if row and sha256_crypt.verify(password, row.password):
-            #Password is correct, proceed with login
-            #Set session or perform any other necessary actions
             session['username'] = username
             session['role'] = role
 
@@ -88,8 +86,6 @@ def reg_stud():
         phone = request.form['phone']
         address = request.form['address']
         dob = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
-        #converting the datetime string of the expected format into a datetime object and 
-        #only accessing date from it.
         mot = request.form.getlist('mot')[0]
         password = request.form['password']
         confirm_password = request.form['check']
@@ -112,13 +108,14 @@ def reg_stud():
         return redirect('/home_stud')
     
     else:
-        return render_template('reg_stud.html') #(if it is get rather than post)
+        return render_template('reg_stud.html')
 
 @app.route('/reg_tut', methods=['GET', 'POST'])
 def reg_tut():
+
     if request.method == 'POST':
         name = request.form['name']
-        username = request.form['email'] #their email becomes username
+        username = request.form['email']
         phone = request.form['phone']
         address = request.form['address']
         dob = request.form['date']
@@ -126,7 +123,7 @@ def reg_tut():
         password = request.form['password']
         confirm_password = request.form['check']
 
-        if password!=confirm_password:
+        if password!=confirm_password: 
             return render_template('reg_tut.html')
 
         hashed_password = sha256_crypt.hash(password)
@@ -141,7 +138,7 @@ def reg_tut():
         return redirect('/home_tut')
     
     else:
-        return render_template('reg_tut.html') #(if it is get rather than post)
+        return render_template('reg_tut.html')
 
 @app.route("/home_stud", methods=['GET', 'POST'])
 def home_stud():
@@ -182,7 +179,7 @@ def tutvc():
 def feedme():
     if request.method == 'POST':
         und = request.form['und']
-        app = request.form['app'] #their email becomes username
+        app = request.form['app']
         cle = request.form['cle']
         eng = request.form['eng']
         kno = request.form['kno']

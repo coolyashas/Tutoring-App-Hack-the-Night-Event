@@ -1,46 +1,35 @@
-from flask import Flask, redirect, render_template, request, session
+from flask import Flask, redirect, render_template, request, session, url_for
 from flask_sqlalchemy import SQLAlchemy
+from flask_oauthlib.client import OAuth
 from passlib.hash import sha256_crypt
-from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SECRET_KEY'] = 'vyuvbyubugYUVKFVKUFV7678vk'
 db = SQLAlchemy(app)
+oauth = OAuth(app)
 
-class Student(db.Model):
+google = oauth.remote_app(
+    'google',
+    consumer_key='your_google_client_id',
+    consumer_secret='your_google_client_secret',
+    request_token_params={
+        'scope': 'email',
+    },
+    base_url='https://www.googleapis.com/oauth2/v1/',
+    request_token_url=None,
+    access_token_method='POST',
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+)
+
+class Main(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80))
     username = db.Column(db.String(80), unique=True)
     password = db.Column(db.String(120))
-    phone = db.Column(db.String(20))
-    address = db.Column(db.String(120))
-    dob = db.Column(db.Date)
-    subject = db.Column(db.String(120))
-    date = db.Column(db.Date)
-    time = db.Column(db.Time)
-    mot = db.Column(db.String(120)) #Mode of teaching
-
-class Tutor(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80))
-    username = db.Column(db.String(80), unique=True)
-    password = db.Column(db.String(120))
-    rating = db.Column(db.Float)
-    points = db.Column(db.Integer)
-    subject = db.Column(db.String(120))
-    mot = db.Column(db.String(120))
-
-class Session(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('student.id'))
-    tutor_id = db.Column(db.Integer, db.ForeignKey('tutor.id'))
-    subjects = db.Column(db.String(120))
-    medium = db.Column(db.String(120))
-    date_time = db.Column(db.DateTime)
-    duration = db.Column(db.Integer)
-    student = db.relationship('Student', backref='sessions')
-    tutor = db.relationship('Tutor', backref='sessions')
+    ph = db.Column(db.Float)
+    hardness = db.Column(db.Float)
+    cost = db.Column(db.Integer)
 
 with app.app_context():
     db.create_all()
@@ -50,147 +39,64 @@ def login():
     session.clear()
 
     if request.method == 'POST':
-        print("post HIII")
-
         username = request.form['username']
         password = request.form['password']
-        role = request.form['role']
 
-        if role == "tutor":
-            row = Tutor.query.filter_by(username=username).first()
-        elif role == "student":
-            row = Student.query.filter_by(username=username).first()
+        row = Main.query.filter_by(username=username).first()
 
         if row and sha256_crypt.verify(password, row.password):
             session['username'] = username
-            session['role'] = role
 
-            if role=="tutor":
-                return redirect("/home_tut")
-            elif role=="student":
-                return redirect("/home_stud")
+            return redirect("/home_stud")
         else:
             return render_template('login.html')
-            
     else:
         return render_template('login.html')
-
-@app.route('/reg_stud', methods=['GET', 'POST'])
-def reg_stud():
-
-    if request.method == 'POST':
-        print("stud POST")
-
-        name = request.form['name']
-        username = request.form['email']
-        phone = request.form['phone']
-        address = request.form['address']
-        dob = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
-        mot = request.form.getlist('mot')[0]
-        password = request.form['password']
-        confirm_password = request.form['check']
-
-        if password!=confirm_password:
-            return render_template('reg_stud.html')
-
-        hashed_password = sha256_crypt.hash(password)
-
-        stu1 = Student(name=name, username=username, password=hashed_password, phone=phone,\
-                       address=address, dob=dob, mot=mot)
-        db.session.add(stu1)
-        db.session.commit()
-
-        print("commited")
-        
-        session['username'] = username
-        session['role'] = 'student'
-
-        return redirect('/home_stud')
     
+@app.route('/details')
+def details():
+    if 'username' in session:
+        # Fetch all rows from the Main table
+        all_rows = Main.query.all()
+        return render_template('details.html', rows=all_rows)
     else:
-        return render_template('reg_stud.html')
+        return redirect(url_for('login'))
 
-@app.route('/reg_tut', methods=['GET', 'POST'])
-def reg_tut():
 
-    if request.method == 'POST':
-        name = request.form['name']
-        username = request.form['email']
-        phone = request.form['phone']
-        address = request.form['address']
-        dob = request.form['date']
-        mot = request.form.getlist('mot')
-        password = request.form['password']
-        confirm_password = request.form['check']
+@app.route('/google_login')
+def google_login():
+    return google.authorize(callback=url_for('google_authorized', _external=True))
 
-        if password!=confirm_password: 
-            return render_template('reg_tut.html')
+@app.route('/google_authorized')
+def google_authorized():
+    resp = google.authorized_response()
 
-        hashed_password = sha256_crypt.hash(password)
+    if resp is None or resp.get('access_token') is None:
+        return 'Access denied: reason={} error={}'.format(
+            request.args['error_reason'],
+            request.args['error_description']
+        )
 
-        stu1 = Tutor(name=name, username=username, password=hashed_password, phone=phone,\
-                       address=address, dob=dob, mot=mot)
-        db.session.add(stu1)
-        db.session.commit()
-        
-        session['username'] = username
-        session['role'] = 'tutor'
-        return redirect('/home_tut')
-    
-    else:
-        return render_template('reg_tut.html')
+    session['google_token'] = (resp['access_token'], '')
 
-@app.route("/home_stud", methods=['GET', 'POST'])
-def home_stud():
-    if request.method=="POST":
-        pass
-    else:
-        return render_template("home_stud.html")
+    user_info = google.get('userinfo')
+    email = user_info.data['email']
 
-@app.route("/home_tut", methods=['GET', 'POST'])
-def home_tut():
-    if request.method=="POST":
-        pass
-    else:
-        return render_template("home_tut.html")
+    # Check if user with this email exists in your database
+    user = Main.query.filter_by(username=email).first()
+    if user:
+        session['username'] = email
+        session['role'] = user.role
+        return redirect(url_for('details'))
 
-@app.route("/stud_vc", methods=['GET', 'POST'])
-def studvc():
-    if request.method == 'POST':
-        subject = request.form['Subject']
-        date = request.form['date']
-        time = request.form['time']
-        Student.query.filter_by(username=session['username']).update(subject=subject, date=date, time=time)
-        return redirect('/home_stud')
-    else:
-        return render_template('stud_vc.html')
+    # If user does not exist, you can redirect to a registration page
+    # or automatically create a new user with default credentials
 
-@app.route("/tut_vc", methods=['GET', 'POST'])
-def tutvc():
-    if request.method == 'POST':
-        row = Tutor.query.filter_by(username=session['username']).first()
-        subject = row.subject
-        mot = row.mot
-        rows = Student.query.filter_by(subject=subject, mot=mot).all()
-    else:
-        return render_template('tut_vc.html', rows=rows)
-    
-@app.route("/feedback", methods=['GET', 'POST'])
-def feedme():
-    if request.method == 'POST':
-        und = request.form['und']
-        app = request.form['app']
-        cle = request.form['cle']
-        eng = request.form['eng']
-        kno = request.form['kno']
-        name = request.form['name']
-        avg = (int(und)+int(app)+int(cle)+int(eng)+int(kno))/5
+    return redirect(url_for('register'))
 
-        #code for rating and points.
-        #Tutor.query.filter_by(username=name).update(score=score+avg)
-    else:
-        return render_template('feedback.html')
-
+@google.tokengetter
+def get_google_oauth_token():
+    return session.get('google_token')
 
 if __name__ == '__main__':
     app.run()

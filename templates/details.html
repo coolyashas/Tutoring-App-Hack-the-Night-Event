@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Details</title>
+</head>
+<body>
+    <h1>Details Page</h1>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Phone</th>
+            <th>Hardness</th>
+            <th>Cost</th>
+        </tr>
+        {% for row in rows %}
+        <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.username }}</td>
+            <td>{{ row.ph }}</td>
+            <td>{{ row.hardness }}</td>
+            <td>{{ row.cost }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
